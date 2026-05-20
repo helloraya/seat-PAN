@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistem Booking Kursi</title>
+  <style>
+    /* Ini sedikit CSS tambahan biar tombolnya kelihatan rapi dan necis */
+    body { font-family: sans-serif; padding: 20px; }
+    .seat { padding: 15px; cursor: pointer; border: 1px solid #ccc; border-radius: 5px; font-weight: bold; }
+    .booked { background: #ff4d4d !important; color: white; cursor: not-allowed; border: none; }
+  </style>
+</head>
+<body>
+
+  <!-- ========================================== -->
+  <!-- BAGIAN 1: HTML (TAMPILAN VISUAL KURSI)     -->
+  <!-- ========================================== -->
+  <div class="cinema-room">
+    <div class="screen" style="background: black; color: white; text-align: center; margin-bottom: 30px; padding: 10px; border-radius: 5px;">LAYAR</div>
+    
+    <!-- Baris A -->
+    <div class="row" style="display: flex; gap: 10px; justify-content: center; margin-bottom: 15px;">
+      <button class="seat" data-id="A1">A1</button>
+      <button class="seat" data-id="A2">A2</button>
+      <!-- Contoh kursi A3 dibikin statusnya udah ada yang booking -->
+      <button class="seat booked" data-id="A3" disabled>A3</button> 
+      <button class="seat" data-id="A4">A4</button>
+    </div>
+    
+    <!-- Baris B -->
+    <div class="row" style="display: flex; gap: 10px; justify-content: center; margin-bottom: 30px;">
+      <button class="seat" data-id="B1">B1</button>
+      <button class="seat" data-id="B2">B2</button>
+      <button class="seat" data-id="B3">B3</button>
+      <button class="seat" data-id="B4">B4</button>
+    </div>
+  </div>
+
+  <button id="bookBtn" style="display: block; margin: 0 auto; padding: 10px 20px; font-size: 16px; cursor: pointer;">Daftar / Booking</button>
+
+  <!-- ========================================== -->
+  <!-- BAGIAN 2: JAVASCRIPT (LOGIKA KLIK)         -->
+  <!-- Diselipin di dalam tag <script>            -->
+  <!-- ========================================== -->
+  <script>
+    const seats = document.querySelectorAll('.seat:not(.booked)');
+    let selectedSeats = [];
+
+    // Bikin kursi bisa diklik
+    seats.forEach(seat => {
+      seat.addEventListener('click', () => {
+        const seatId = seat.getAttribute('data-id');
+
+        if (selectedSeats.includes(seatId)) {
+           // Batal pilih
+           selectedSeats = selectedSeats.filter(id => id !== seatId);
+           seat.style.background = ""; // Balikin warna semula
+        } else {
+           // Pilih kursi
+           selectedSeats.push(seatId);
+           seat.style.background = "lightgreen"; // Berubah warna
+        }
+      });
+    });
+
+    // Pas tombol daftar diklik
+    document.getElementById('bookBtn').addEventListener('click', () => {
+      if(selectedSeats.length > 0) {
+        alert(`Mantap! Lu berhasil booking kursi: ${selectedSeats.join(', ')}`);
+      } else {
+        alert('Pilih kursi dulu dong, bos!');
+      }
+    });
+  </script>
+
+</body>
+</html>
