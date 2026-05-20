@@ -3,76 +3,128 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sistem Booking Kursi</title>
+  <title>Sistem Booking Kursi Bioskop</title>
   <style>
-    /* Ini sedikit CSS tambahan biar tombolnya kelihatan rapi dan necis */
-    body { font-family: sans-serif; padding: 20px; }
-    .seat { padding: 15px; cursor: pointer; border: 1px solid #ccc; border-radius: 5px; font-weight: bold; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; background: #f4f4f9; color: #333; }
+    .container { max-width: 500px; margin: 0 auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+    h2 { text-align: center; margin-bottom: 20px; }
+    
+    /* Layout Kursi */
+    .screen { background: #222; color: white; text-align: center; margin-bottom: 30px; padding: 10px; border-radius: 5px; font-weight: bold; letter-spacing: 2px; }
+    .row { display: flex; gap: 10px; justify-content: center; margin-bottom: 15px; }
+    .seat { width: 50px; height: 50px; cursor: pointer; border: 2px solid #ddd; border-radius: 8px; font-weight: bold; background: white; transition: 0.2s; }
+    .seat:hover:not(.booked) { border-color: #2196F3; background: #e3f2fd; }
     .booked { background: #ff4d4d !important; color: white; cursor: not-allowed; border: none; }
+    
+    /* Tombol Utama */
+    .btn { display: block; width: 100%; padding: 12px; font-size: 16px; font-weight: bold; cursor: pointer; border: none; border-radius: 8px; text-align: center; }
+    #bookBtn { background: #2196F3; color: white; margin-top: 20px; }
+    #bookBtn:hover { background: #1e88e5; }
+    
+    /* Desain Tiket (Awalnya Tersembunyi) */
+    #ticketSection { display: none; text-align: center; border: 2px dashed #2196F3; padding: 20px; border-radius: 12px; background: #fff; }
+    .ticket-title { font-size: 22px; font-weight: bold; color: #2196F3; margin-bottom: 10px; }
+    .ticket-info { margin: 15px 0; font-size: 18px; }
+    .qr-box { margin: 20px 0; }
+    .qr-box img { border: 1px solid #ccc; padding: 5px; border-radius: 5px; }
+    #printBtn { background: #4CAF50; color: white; }
+    
+    /* CSS Khusus buat nge-print biar rapi */
+    @media print {
+      body { background: white; padding: 0; }
+      .container { box-shadow: none; max-width: 100%; }
+      #printBtn { display: none; }
+    }
   </style>
 </head>
 <body>
 
-  <!-- ========================================== -->
-  <!-- BAGIAN 1: HTML (TAMPILAN VISUAL KURSI)     -->
-  <!-- ========================================== -->
-  <div class="cinema-room">
-    <div class="screen" style="background: black; color: white; text-align: center; margin-bottom: 30px; padding: 10px; border-radius: 5px;">LAYAR</div>
+<div class="container">
+
+  <div id="bookingSection">
+    <h2>Pilih Kursi Lu</h2>
+    <div class="screen">LAYAR BIOSKOP</div>
     
-    <!-- Baris A -->
-    <div class="row" style="display: flex; gap: 10px; justify-content: center; margin-bottom: 15px;">
+    <div class="row">
       <button class="seat" data-id="A1">A1</button>
       <button class="seat" data-id="A2">A2</button>
-      <!-- Contoh kursi A3 dibikin statusnya udah ada yang booking -->
       <button class="seat booked" data-id="A3" disabled>A3</button> 
       <button class="seat" data-id="A4">A4</button>
     </div>
     
-    <!-- Baris B -->
-    <div class="row" style="display: flex; gap: 10px; justify-content: center; margin-bottom: 30px;">
+    <div class="row">
       <button class="seat" data-id="B1">B1</button>
       <button class="seat" data-id="B2">B2</button>
       <button class="seat" data-id="B3">B3</button>
       <button class="seat" data-id="B4">B4</button>
     </div>
+
+    <button id="bookBtn" class="btn">Daftar & Konfirmasi Kursi</button>
   </div>
 
-  <button id="bookBtn" style="display: block; margin: 0 auto; padding: 10px 20px; font-size: 16px; cursor: pointer;">Daftar / Booking</button>
+  <div id="ticketSection">
+    <div class="ticket-title">E-TICKET BIOSKOP</div>
+    <p style="color: #666; margin-top: 0;">Simpan atau screenshot tiket ini</p>
+    <hr style="border: 1px dashed #ccc;">
+    
+    <div class="ticket-info">
+      Nomor Kursi: <strong id="ticketSeat" style="color: #ff4d4d;">-</strong>
+    </div>
+    
+    <div class="qr-box">
+      <img id="qrCode" src="" alt="QR Code Tiket" width="150" height="150">
+    </div>
+    
+    <p style="font-size: 12px; color: #999;">Scan QR di atas saat masuk studio</p>
+    <button id="printBtn" class="btn" onclick="window.print()">Print / Save PDF</button>
+  </div>
 
-  <!-- ========================================== -->
-  <!-- BAGIAN 2: JAVASCRIPT (LOGIKA KLIK)         -->
-  <!-- Diselipin di dalam tag <script>            -->
-  <!-- ========================================== -->
-  <script>
-    const seats = document.querySelectorAll('.seat:not(.booked)');
-    let selectedSeats = [];
+</div>
 
-    // Bikin kursi bisa diklik
-    seats.forEach(seat => {
-      seat.addEventListener('click', () => {
-        const seatId = seat.getAttribute('data-id');
+<script>
+  const seats = document.querySelectorAll('.seat:not(.booked)');
+  let selectedSeats = [];
 
-        if (selectedSeats.includes(seatId)) {
-           // Batal pilih
-           selectedSeats = selectedSeats.filter(id => id !== seatId);
-           seat.style.background = ""; // Balikin warna semula
-        } else {
-           // Pilih kursi
-           selectedSeats.push(seatId);
-           seat.style.background = "lightgreen"; // Berubah warna
-        }
-      });
-    });
+  // Sistem Pilih Kursi
+  seats.forEach(seat => {
+    seat.addEventListener('click', () => {
+      const seatId = seat.getAttribute('data-id');
 
-    // Pas tombol daftar diklik
-    document.getElementById('bookBtn').addEventListener('click', () => {
-      if(selectedSeats.length > 0) {
-        alert(`Mantap! Lu berhasil booking kursi: ${selectedSeats.join(', ')}`);
+      if (selectedSeats.includes(seatId)) {
+         selectedSeats = selectedSeats.filter(id => id !== seatId);
+         seat.style.background = ""; 
+         seat.style.color = "";
       } else {
-        alert('Pilih kursi dulu dong, bos!');
+         selectedSeats.push(seatId);
+         seat.style.background = "#2196F3"; // Ubah jadi biru pas dipilih
+         seat.style.color = "white";
       }
     });
-  </script>
+  });
+
+  // Sistem Generate Tiket + QR Code
+  document.getElementById('bookBtn').addEventListener('click', () => {
+    if(selectedSeats.length > 0) {
+      // 1. Sembunyin halaman pemilihan kursi
+      document.getElementById('bookingSection').style.display = 'none';
+      
+      // 2. Munculin halaman tiket
+      document.getElementById('ticketSection').style.display = 'block';
+      
+      // 3. Masukin data kursi yang dipilih ke teks tiket
+      const susunanKursi = selectedSeats.join(', ');
+      document.getElementById('ticketSeat').innerText = susunanKursi;
+      
+      // 4. Generate QR Code otomatis pakai API gratisan
+      // Isi QR-nya berupa teks kode unik, misal: "TIKET-A1-A2"
+      const dataQR = `TIKET-${selectedSeats.join('-')}`;
+      document.getElementById('qrCode').src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(dataQR)}`;
+      
+    } else {
+      alert('Pilih kursi dulu dong, bos!');
+    }
+  });
+</script>
 
 </body>
 </html>
