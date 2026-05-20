@@ -3,35 +3,48 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sistem Booking Kelas Kakap</title>
+  <title>Sistem Booking Kelas Kakap v2</title>
   <style>
     body { font-family: 'Segoe UI', Tahoma, sans-serif; padding: 20px; background: #f4f4f9; }
     .container { max-width: 500px; margin: 0 auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-    h2 { text-align: center; }
+    h2 { text-align: center; color: #333; }
     
     /* Layout Kursi */
     .screen { background: #222; color: white; text-align: center; margin-bottom: 30px; padding: 10px; border-radius: 5px; font-weight: bold; }
     .row { display: flex; gap: 10px; justify-content: center; margin-bottom: 15px; }
-    .seat { width: 50px; height: 50px; cursor: pointer; border: 2px solid #ddd; border-radius: 8px; font-weight: bold; background: white; }
+    .seat { width: 50px; height: 50px; cursor: pointer; border: 2px solid #ddd; border-radius: 8px; font-weight: bold; background: white; transition: 0.2s; }
     .seat:hover:not(.booked) { border-color: #2196F3; background: #e3f2fd; }
     .booked { background: #ff4d4d !important; color: white; border: none; }
     
+    /* Tombol Utama */
     .btn { display: block; width: 100%; padding: 12px; font-size: 16px; font-weight: bold; cursor: pointer; border: none; border-radius: 8px; }
     #bookBtn { background: #2196F3; color: white; margin-top: 20px; }
+    #adminBtn { background: #333; color: white; margin-top: 10px; }
     
-    /* POP-UP MODAL (Nutupin layar di atasnya) */
+    /* POP-UP MODAL (Berlaku buat Form, Tiket, & Admin) */
     .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 999; }
-    .modal-content { background: white; padding: 20px; border-radius: 12px; text-align: center; width: 300px; position: relative; }
-    .close-btn { position: absolute; top: 10px; right: 15px; font-size: 20px; cursor: pointer; color: #888; font-weight: bold; }
+    .modal-content { background: white; padding: 20px; border-radius: 12px; text-align: center; width: 90%; max-width: 350px; position: relative; max-height: 80vh; overflow-y: auto; }
+    .close-btn { position: absolute; top: 10px; right: 15px; font-size: 24px; cursor: pointer; color: #888; font-weight: bold; }
     
+    /* Input Form */
+    .input-group { margin: 15px 0; text-align: left; }
+    .input-group label { font-weight: bold; font-size: 14px; display: block; margin-bottom: 5px; }
+    .input-group input { width: 90%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 16px; }
+    #submitFormBtn { background: #4CAF50; color: white; }
+
+    /* Desain Tiket & Tabel */
     .ticket-title { font-size: 20px; font-weight: bold; color: #2196F3; }
     .qr-box img { border: 1px solid #ccc; padding: 5px; border-radius: 5px; margin: 15px 0; }
     #printBtn { background: #4CAF50; color: white; margin-top: 10px; }
+    
+    table { width: 100%; border-collapse: collapse; margin-top: 15px; text-align: left; }
+    th, td { border: 1px solid #ddd; padding: 8px; }
+    th { background-color: #f2f2f2; }
 
     @media print {
       body * { visibility: hidden; }
-      .modal-content, .modal-content * { visibility: visible; }
-      .modal-content { position: absolute; left: 0; top: 0; margin: 0; padding: 0; width: 100%; }
+      #ticketModal .modal-content, #ticketModal .modal-content * { visibility: visible; }
+      #ticketModal .modal-content { position: absolute; left: 0; top: 0; margin: 0; padding: 0; width: 100%; box-shadow: none; }
       #printBtn, .close-btn { display: none; }
     }
   </style>
@@ -56,111 +69,189 @@
     <button class="seat" data-id="B4">B4</button>
   </div>
 
-  <button id="bookBtn" class="btn">Daftar & Konfirmasi Kursi</button>
+  <button id="bookBtn" class="btn">Daftar Kursi</button>
+  <button id="adminBtn" class="btn">Dasbor Admin (Rahasia)</button>
+</div>
+
+<div class="modal-overlay" id="formModal">
+  <div class="modal-content">
+    <span class="close-btn" onclick="closeModal('formModal')">&times;</span>
+    <h3>Isi Data Diri</h3>
+    <p style="font-size: 14px; color: #666;">Kursi pilihan: <strong id="selectedSeatsText"></strong></p>
+    
+    <div class="input-group">
+      <label>Nama Lengkap / Panggilan:</label>
+      <input type="text" id="inputNama" placeholder="Ketik nama di sini...">
+    </div>
+    
+    <button id="submitFormBtn" class="btn">Konfirmasi & Cetak Tiket</button>
+  </div>
 </div>
 
 <div class="modal-overlay" id="ticketModal">
   <div class="modal-content">
-    <span class="close-btn" id="closeModal">&times;</span>
+    <span class="close-btn" onclick="closeModal('ticketModal')">&times;</span>
     <div class="ticket-title">E-TICKET ACARA</div>
+    <hr style="border: 1px dashed #ccc; margin: 10px 0;">
+    <p>Nama: <strong id="ticketName">-</strong></p>
     <p>Kursi: <strong id="ticketSeat" style="color: #ff4d4d;">-</strong></p>
     
     <div class="qr-box">
       <img id="qrCode" src="" alt="QR Code Tiket" width="150" height="150">
     </div>
-    
     <button id="printBtn" class="btn" onclick="window.print()">Print Tiket</button>
   </div>
 </div>
 
+<div class="modal-overlay" id="adminModal">
+  <div class="modal-content">
+    <span class="close-btn" onclick="closeModal('adminModal')">&times;</span>
+    <h3 style="color: #333;">Data Pendaftar</h3>
+    <p style="font-size: 14px; text-align: left;">Total Terisi: <strong id="totalBookedText">0</strong> Kursi</p>
+    
+    <table>
+      <thead>
+        <tr>
+          <th>ID Kursi</th>
+          <th>Nama Orang</th>
+        </tr>
+      </thead>
+      <tbody id="adminTableBody">
+        </tbody>
+    </table>
+  </div>
+</div>
+
 <script>
-  const MANAGER_PIN = "8888"; // PIN Manager buat reset kursi
+  const MANAGER_PIN = "8888";
   const seats = document.querySelectorAll('.seat');
   
-  // Ambil data dari "Hardisk Browser" (LocalStorage)
-  let bookedSeats = JSON.parse(localStorage.getItem('bookedSeats')) || [];
+  // Database berubah jadi Object, bentuknya -> { "A1": "Nama Orang", "B2": "Nama Orang" }
+  let bookedData = JSON.parse(localStorage.getItem('cinemaBookings_v2')) || {};
   let selectedSeats = [];
 
-  // Fungsi buat nge-render ulang kursi pas awal buka / abis booking
   function renderSeats() {
     seats.forEach(seat => {
       const seatId = seat.getAttribute('data-id');
-      
-      // Reset style bawaan dulu
       seat.className = 'seat';
       seat.style.background = "";
       seat.style.color = "";
       
-      // Kalau ada di database lokal, bikin jadi merah
-      if (bookedSeats.includes(seatId)) {
+      // Kalau ID Kursi ada di dalam database
+      if (bookedData[seatId]) {
         seat.classList.add('booked');
-      } 
-      // Kalau lagi dipilih saat ini (keranjang), bikin biru
-      else if (selectedSeats.includes(seatId)) {
+      } else if (selectedSeats.includes(seatId)) {
         seat.style.background = "#2196F3";
         seat.style.color = "white";
       }
     });
   }
 
-  // Aksi pas kursi diklik
+  // Fungsi tutup Pop-up biar rapi
+  function closeModal(modalId) {
+    document.getElementById(modalId).style.display = 'none';
+  }
+
+  // 1. Aksi pas kursi diklik
   seats.forEach(seat => {
     seat.addEventListener('click', () => {
       const seatId = seat.getAttribute('data-id');
 
-      // LOGIKA MANAGER: Kalau kursi udah dibooking (merah)
-      if (bookedSeats.includes(seatId)) {
-        let inputPin = prompt(`Kursi ${seatId} udah di-booking. Masukin PIN Manager buat ngebatalin:`);
-        if (inputPin === MANAGER_PIN) {
-          bookedSeats = bookedSeats.filter(id => id !== seatId); // Hapus dari daftar booked
-          localStorage.setItem('bookedSeats', JSON.stringify(bookedSeats)); // Update hardisk lokal
-          alert(`Kursi ${seatId} berhasil di-reset!`);
-          renderSeats();
-        } else if (inputPin !== null) {
-          alert("PIN Salah ngab!");
+      // Kalau kursi merah (udah dibooking) dipencet
+      if (bookedData[seatId]) {
+        const occupantName = bookedData[seatId];
+        let action = confirm(`INFO KURSI:\nKursi ${seatId} ini udah dibooking atas nama [ ${occupantName} ].\n\nLu manajer dan mau nge-hapus kursi ini?`);
+        
+        if (action) {
+          let inputPin = prompt("Masukin PIN Manager:");
+          if (inputPin === MANAGER_PIN) {
+            delete bookedData[seatId]; // Hapus data orangnya
+            localStorage.setItem('cinemaBookings_v2', JSON.stringify(bookedData)); // Update hardisk lokal
+            alert(`Bookingan ${seatId} berhasil dihapus!`);
+            renderSeats();
+          } else if (inputPin !== null) {
+            alert("PIN Salah ngab!");
+          }
         }
-        return; // Stop proses di sini biar gak masuk keranjang
+        return; // Stop di sini
       }
 
-      // LOGIKA USER BIASA: Pilih atau batal pilih kursi kosong
+      // Kalau kursi kosong dipencet
       if (selectedSeats.includes(seatId)) {
-         selectedSeats = selectedSeats.filter(id => id !== seatId);
+         selectedSeats = selectedSeats.filter(id => id !== seatId); // Batal
       } else {
-         selectedSeats.push(seatId);
+         selectedSeats.push(seatId); // Pilih
       }
       renderSeats();
     });
   });
 
-  // Munculin Pop-up Tiket
+  // 2. Klik Daftar -> Munculin Form Nama
   document.getElementById('bookBtn').addEventListener('click', () => {
     if(selectedSeats.length > 0) {
-      // 1. Simpen kursi yang dipilih ke "database" lokal
-      bookedSeats.push(...selectedSeats);
-      localStorage.setItem('bookedSeats', JSON.stringify(bookedSeats));
-      
-      // 2. Tulis data ke Pop-up
-      document.getElementById('ticketSeat').innerText = selectedSeats.join(', ');
-      const dataQR = `TIKET-${selectedSeats.join('-')}`;
-      document.getElementById('qrCode').src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(dataQR)}`;
-      
-      // 3. Tunjukin Pop-up nya
-      document.getElementById('ticketModal').style.display = 'flex';
-      
-      // 4. Kosongin keranjang belanja dan update visual
-      selectedSeats = [];
-      renderSeats();
+      document.getElementById('formModal').style.display = 'flex';
+      document.getElementById('selectedSeatsText').innerText = selectedSeats.join(', ');
     } else {
       alert('Pilih kursi dulu dong, bos!');
     }
   });
 
-  // Nutup Pop-up Tiket
-  document.getElementById('closeModal').addEventListener('click', () => {
-    document.getElementById('ticketModal').style.display = 'none';
+  // 3. Submit Form -> Simpen Data & Munculin Tiket
+  document.getElementById('submitFormBtn').addEventListener('click', () => {
+    const nama = document.getElementById('inputNama').value.trim();
+    if (!nama) {
+      alert("Woy, namanya diisi dulu dong!");
+      return;
+    }
+
+    // Masukin data pasangan (Kursi -> Nama) ke database
+    selectedSeats.forEach(seatId => {
+      bookedData[seatId] = nama;
+    });
+    localStorage.setItem('cinemaBookings_v2', JSON.stringify(bookedData));
+
+    // Siapin & Tunjukin Tiket
+    document.getElementById('ticketSeat').innerText = selectedSeats.join(', ');
+    document.getElementById('ticketName').innerText = nama;
+    
+    // Bikin QR Code unik (Nama + Kursi)
+    const dataQR = `TIKET-${nama.replace(/\s+/g, '')}-${selectedSeats.join('-')}`;
+    document.getElementById('qrCode').src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(dataQR)}`;
+    
+    // Tutup form, buka tiket, reset keranjang
+    closeModal('formModal');
+    document.getElementById('ticketModal').style.display = 'flex';
+    document.getElementById('inputNama').value = ""; 
+    
+    selectedSeats = [];
+    renderSeats();
   });
 
-  // Jalanin fungsi render pas web pertama kali dibuka
+  // 4. Buka Dasbor Admin (Rekapitulasi)
+  document.getElementById('adminBtn').addEventListener('click', () => {
+    let inputPin = prompt("Masukin PIN Manager buat buka Dasbor:");
+    if (inputPin === MANAGER_PIN) {
+      document.getElementById('adminModal').style.display = 'flex';
+      
+      const tbody = document.getElementById('adminTableBody');
+      tbody.innerHTML = ""; // Bersihin tabel lama
+      
+      let totalBooked = 0;
+      // Looping bongkar isi database buat dijadiin tabel
+      for (const [seatId, nama] of Object.entries(bookedData)) {
+        totalBooked++;
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${seatId}</td><td>${nama}</td>`;
+        tbody.appendChild(tr);
+      }
+      
+      document.getElementById('totalBookedText').innerText = totalBooked;
+    } else if (inputPin !== null) {
+      alert("PIN Salah ngab!");
+    }
+  });
+
+  // Render awal pas baru dibuka
   renderSeats();
 </script>
 
